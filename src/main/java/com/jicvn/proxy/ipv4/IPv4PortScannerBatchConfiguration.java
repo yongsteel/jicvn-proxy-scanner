@@ -35,10 +35,10 @@ public class IPv4PortScannerBatchConfiguration {
 	private final static Logger logger = LoggerFactory.getLogger(IPv4PortScannerBatchConfiguration.class);
 
 	@Resource
-	private JobBuilderFactory jobBuilderFactory; // 用于构建JOB
+	private JobBuilderFactory jobBuilderFactory; 
 
 	@Resource
-	private StepBuilderFactory stepBuilderFactory; // 用于构建Step
+	private StepBuilderFactory stepBuilderFactory; 
 
 	@Autowired
 	private ProxyRepository proxyRepository;
@@ -114,16 +114,15 @@ public class IPv4PortScannerBatchConfiguration {
 	private boolean portIsOpen(String host, Integer port) {
 		
 		if(port == null) {
-			return false;
+			throw new IllegalArgumentException("port is null:" + port);
 		}
 		
 		if (port < 0 || port > 0xFFFF) {
-			return false;
+			throw new IllegalArgumentException("port out of range:" + port);
 		}
 		
 		try(Socket soc = new Socket()) {
 			soc.connect(new InetSocketAddress(host, port) , 200);
-			soc.close();
 			return true;
 		} catch (IOException e) {
 		}
@@ -148,7 +147,7 @@ public class IPv4PortScannerBatchConfiguration {
 				.retryLimit(3) //
 				.retry(Exception.class) //
 				.skipLimit(3) //
-				.skip(Exception.class) // 捕捉到异常就重试,重试100次还是异常,JOB就停止并标志失败
+				.skip(Exception.class) // 捕捉到异常就重试,重试3次还是异常,JOB就停止并标志失败
 				.reader(getIPv4PortScannerReader()) // 指定ItemReader
 				.processor(getIPv4PortScannerProcessor()) // 指定ItemProcessor
 				.writer(getIPv4PortScannerWriter()) // 指定ItemWriter
